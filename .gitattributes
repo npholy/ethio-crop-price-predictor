@@ -1,1 +1,2 @@
 *.pkl filter=lfs diff=lfs merge=lfs -text
+models/crop_price_model.pkl filter=lfs diff=lfs merge=lfs -text
