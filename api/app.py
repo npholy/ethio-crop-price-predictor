@@ -31,11 +31,9 @@ CORS(app,
 # Paths
 # Get the absolute path to the api/ directory (where this file is)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Navigate up to the project root directory (ethio-crop-price-predictor/)
-PROJECT_ROOT = os.path.dirname(BASE_DIR)
-# Build absolute paths to models/ and data directories
-MODELS_DIR = os.path.join(PROJECT_ROOT, 'models')
-DATA_PATH = os.path.join(PROJECT_ROOT, 'data', 'raw', 'wfp_food_prices_eth.csv')
+# Since models/ and data/ are now INSIDE api/ directory, use BASE_DIR directly
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'raw', 'wfp_food_prices_eth.csv')
 
 # Load model and encoders
 model = pickle.load(open(os.path.join(MODELS_DIR, 'crop_price_model.pkl'), 'rb'))
