@@ -7,7 +7,7 @@
 // Falls back to localhost for development, uses production URL otherwise
 const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://127.0.0.1:5000'
-    : 'https://ethio-crop-price-predictor-api.onrender.com';
+    : 'https://ethio-crop-price-predictor.onrender.com';
 
 // State management
 let priceChart = null;
