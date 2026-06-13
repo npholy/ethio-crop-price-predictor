@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EthioPrice | Enterprise Crop Price Intelligence</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Brand Colors - Enhanced */
+            --primary-green: #1D9E75;
+            --primary-green-hover: #178866;
+            --primary-green-light: rgba(29, 158, 117, 0.1);
+            --primary-green-glow: rgba(29, 158, 117, 0.2);
+
+            /* Neutral Palette - Premium */
+            --background: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --card-bg-glass: rgba(255, 255, 255, 0.8);
+            --text-primary: #1A202C;
+            --text-secondary: #64748B;
+            --text-muted: #94A3B8;
+            --border-color: #E2E8F0;
+            --border-color-light: #F1F5F9;
+
+            /* Alert Colors */
+            --error-red: #EF4444;
+            --error-bg: #FEF2F2;
+            --warning-amber: #F59E0B;
+
+            /* Premium Layered Shadows */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #1D9E75 0%, #15B388 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background);
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(29, 158, 117, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.02) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+
+        /* Premium Glassmorphism Header */
+        header {
+            background: var(--card-bg-glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 1.75rem 2.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+            z-index: -1;
+        }
+
+        .header-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 19px;
+            box-shadow: 0 4px 6px -1px rgba(29, 158, 117, 0.3), 0 2px 4px -2px rgba(29, 158, 117, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .logo-icon:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(29, 158, 117, 0.4), 0 4px 6px -4px rgba(29, 158, 117, 0.3);
+        }
+
+        .logo h1 {
+            font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            padding: 0.5rem 1rem;
+            background: rgba(29, 158, 117, 0.05);
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: 1px solid rgba(29, 158, 117, 0.1);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            box-shadow: 0 0 8px var(--primary-green-glow);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(0.95);
+            }
+        }
+
+        /* Main Container with Enhanced Spacing */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 3rem 2.5rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Premium Card Styling with Layered Shadows */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow:
+                0 1px 3px 0 rgba(0, 0, 0, 0.1),
+                0 1px 2px -1px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color-light);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            opacity: 0.5;
+        }
+
+        .card:hover {
+            box-shadow:
+                0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -4px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(29, 158, 117, 0.1);
+        }
+
+        .card-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+
+        .card-title {
+            font-size: clamp(1.125rem, 2vw, 1.375rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.375rem;
+            letter-spacing: -0.02em;
+        }
+
+        .card-subtitle {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* Enhanced Form Styling */
+        .form-group {
+            margin-bottom: 1.75rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.625rem;
+            letter-spacing: 0.01em;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.875rem 1.125rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            font-weight: 400;
+            color: var(--text-primary);
+            background: var(--card-bg);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .form-input:hover,
+        .form-select:hover {
+            border-color: rgba(29, 158, 117, 0.3);
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 4px var(--primary-green-light), var(--shadow-sm);
+            background: white;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Premium Button with Micro-interactions */
+        .btn-primary {
+            width: 100%;
+            min-height: 44px;
+            /* Accessibility: minimum touch target */
+            padding: 1.125rem 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            box-shadow:
+                0 4px 6px -1px rgba(29, 158, 117, 0.3),
+                0 2px 4px -2px rgba(29, 158, 117, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow:
+                0 10px 15px -3px rgba(29, 158, 117, 0.4),
+                0 4px 6px -4px rgba(29, 158, 117, 0.3);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow:
+                0 4px 6px -1px rgba(29, 158, 117, 0.3),
+                0 2px 4px -2px rgba(29, 158, 117, 0.2);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Chart Container - Responsive */
+        .chart-container {
+            height: clamp(300px, 50vh, 400px);
+            max-width: 100%;
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        /* Results Section */
+        .results-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .results-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .price-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-green-light), rgba(29, 158, 117, 0.05));
+            border-radius: 12px;
+            border: 1.5px solid var(--primary-green);
+            margin-bottom: 1.5rem;
+        }
+
+        .price-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-value {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            color: var(--primary-green);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .price-unit {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        /* Confidence Score */
+        .confidence-section {
+            margin-top: 1.5rem;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .confidence-score {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-green), #15B388);
+            border-radius: 999px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Insights Grid */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .insight-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: var(--primary-green-light);
+        }
+
+        .insight-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .insight-description {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Error Alert */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: none;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .alert.show {
+            display: flex;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-error {
+            background: var(--error-bg);
+            border: 1.5px solid var(--error-red);
+            color: #991B1B;
+        }
+
+        .alert-warning {
+            background: #FFFBEB;
+            border: 1.5px solid var(--warning-amber);
+            color: #92400E;
+        }
+
+        .alert-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-message {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Metadata Section */
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .metadata-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metadata-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .metadata-value {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Enhanced Responsive Design with Breakpoints */
+
+        /* Tablet and below - Single column layout */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .chart-container {
+                height: clamp(250px, 40vh, 350px);
+            }
+        }
+
+        /* Mobile landscape and portrait */
+        @media (max-width: 768px) {
+            header {
+                padding: 1.25rem 1rem;
+            }
+
+            .header-content {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .logo h1 {
+                font-size: clamp(1.125rem, 4vw, 1.375rem);
+            }
+
+            .status-indicator {
+                font-size: 0.8125rem;
+                padding: 0.375rem 0.875rem;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+
+            .card-header {
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .metadata {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .chart-container {
+                height: clamp(200px, 35vh, 300px);
+            }
+        }
+
+        /* Small mobile devices */
+        @media (max-width: 480px) {
+            :root {
+                font-size: 14px;
+            }
+
+            header {
+                padding: 1rem 0.75rem;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .container {
+                padding: 1rem 0.75rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+                border-radius: 12px;
+            }
+
+            .btn-primary {
+                min-height: 48px;
+                /* Larger touch target on mobile */
+                padding: 1rem 1.25rem;
+                font-size: 0.9375rem;
+            }
+
+            .form-input,
+            .form-select {
+                min-height: 44px;
+                /* Accessibility: touch target */
+                font-size: 16px;
+                /* Prevent iOS zoom */
+            }
+
+            .price-display {
+                padding: 1.5rem 1rem;
+            }
+
+            .insight-card {
+                padding: 1.25rem;
+            }
+        }
+
+        /* Prevent overflow on all screen sizes */
+        * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        img,
+        canvas,
+        iframe,
+        video {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Loading State Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">E</div>
+                <h1>EthioPrice</h1>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="apiStatus">Connected to API</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Error Alert -->
+        <div class="alert alert-error" id="errorAlert">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+                <div class="alert-title">Connection Error</div>
+                <div class="alert-message" id="errorMessage"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Left Column: Input Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Price Prediction</h2>
+                    <p class="card-subtitle">Enter market parameters for AI-powered forecasting</p>
+                </div>
+
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label class="form-label" for="commodity">Commodity</label>
+                        <select class="form-select" id="commodity" required>
+                            <option value="">Select commodity...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="market">Market Region</label>
+                        <select class="form-select" id="market" required>
+                            <option value="">Select market...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="month">Month</label>
+                        <select class="form-select" id="month" required>
+                            <option value="">Select month...</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="year">Year</label>
+                        <input type="number" class="form-input" id="year" min="2020" max="2030" required
+                            placeholder="e.g., 2024">
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="predictBtn">
+                        <span id="btnText">Generate Prediction</span>
+                        <div class="spinner" id="btnSpinner" style="display: none;"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Column: Results & Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Price Forecast Visualization</h2>
+                    <p class="card-subtitle">Historical trends and predicted values</p>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="resultsSection">
+                    <!-- Price Display -->
+                    <div class="price-display">
+                        <div class="price-label">Predicted Price</div>
+                        <div class="price-value" id="predictedPrice">—</div>
+                        <div class="price-unit" id="priceUnit">ETB per 100kg</div>
+                    </div>
+
+                    <!-- Confidence Score -->
+                    <div class="confidence-section">
+                        <div class="confidence-label">
+                            <span>Model Confidence</span>
+                            <span class="confidence-score" id="confidenceScore">—</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="confidenceFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="metadata">
+                        <div class="metadata-item">
+                            <span class="metadata-label">Season</span>
+                            <span class="metadata-value" id="seasonValue">—</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Market</span>
+                            <span class="metadata-value" id="marketValue">—</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Commodity</span>
+                            <span class="metadata-value" id="commodityValue">—</span>
+                        </div>
+                        <div class="metadata-item">
+                            <span class="metadata-label">Period</span>
+                            <span class="metadata-value" id="periodValue">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Insights -->
+        <div class="insights-grid" id="insightsGrid" style="display: none;">
+            <div class="insight-card">
+                <div class="insight-header">
+                    <div class="insight-icon">📈</div>
+                    <div class="insight-title">Price Trend</div>
+                </div>
+                <div class="insight-value" id="trendValue">—</div>
+                <div class="insight-description" id="trendDescription">Analyzing historical patterns</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-header">
+                    <div class="insight-icon">📊</div>
+                    <div class="insight-title">Volatility Index</div>
+                </div>
+                <div class="insight-value" id="volatilityValue">—</div>
+                <div class="insight-description">Price stability assessment</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-header">
+                    <div class="insight-icon">🌍</div>
+                    <div class="insight-title">Market Position</div>
+                </div>
+                <div class="insight-value" id="marketPosition">—</div>
+                <div class="insight-description">Relative to regional average</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay"></div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+
+</html>
