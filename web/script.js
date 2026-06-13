@@ -4,13 +4,10 @@
  */
 
 // Configuration - Production-ready API URL
-// For Vercel deployment, set API_URL environment variable
-// Falls back to localhost for development
-const API_BASE_URL = typeof process !== 'undefined' && process.env && process.env.API_URL
-    ? process.env.API_URL
-    : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://127.0.0.1:5000'
-        : 'https://your-render-backend.onrender.com'; // Replace with your Render URL
+// Falls back to localhost for development, uses production URL otherwise
+const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5000'
+    : 'https://ethio-crop-price-predictor-api.onrender.com';
 
 // State management
 let priceChart = null;
@@ -86,7 +83,7 @@ async function checkAPIConnection() {
         }
     } catch (error) {
         apiStatus.textContent = 'API Offline';
-        showError('Unable to connect to the Flask API. Please ensure the server is running at http://127.0.0.1:5000');
+        showError('Unable to connect to the Flask API. Please check your connection and try again.');
         console.error('API Connection Error:', error);
     }
 }
