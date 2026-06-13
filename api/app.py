@@ -9,16 +9,24 @@ app = Flask(__name__)
 
 # Production-ready CORS configuration
 # Uses environment variable for frontend URL, with fallback for local development
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://ethio-crop-price-predictor.vercel.app')
 ALLOWED_ORIGINS = [
-    "https://ethio-crop-price-predictor.vercel.app" 
+    'https://ethio-crop-price-predictor.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:5000',
+    'http://127.0.0.1:8080'
 ]
 
+# Apply CORS globally with explicit configuration
 CORS(app, 
-     origins=ALLOWED_ORIGINS,
-     methods=['GET', 'POST', 'OPTIONS'],
-     allow_headers=['Content-Type'],
-     supports_credentials=True)
+     resources={r"/*": {
+         "origins": ALLOWED_ORIGINS,
+         "methods": ["GET", "POST", "OPTIONS"],
+         "allow_headers": ["Content-Type", "Authorization"],
+         "supports_credentials": True,
+         "expose_headers": ["Content-Type"]
+     }})
 
 # Paths
 # Get the absolute path to the api/ directory (where this file is)
@@ -171,9 +179,28 @@ def get_lag_features_with_fallback(commodity, admin, month, year):
                 'warning': warning
             }
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def home():
-    return jsonify({'message': 'EthioPrice API is running'})
+    """Root endpoint - health check"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'EthioPrice API is running',
+        'version': '1.0.0',
+        'endpoints': {
+            'health': '/',
+            'crops': '/crops',
+            'markets': '/markets',
+            'predict': '/predict (POST)'
+        }
+    }), 200
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Alternative health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'EthioPrice API is running'
+    }), 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -318,13 +345,58 @@ def predict():
 
 @app.route('/crops', methods=['GET'])
 def get_crops():
-    crops = le_commodity.classes_.tolist()
-    return jsonify({'crops': crops})
+    """Get list of all available crops/commodities"""
+    try:
+        crops = le_commodity.classes_.tolist()
+        return jsonify({
+            'crops': crops,
+            'count': len(crops)
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] Error in /crops: {str(e)}")
+        return jsonify({
+            'error': 'Failed to retrieve crops list',
+            'details': str(e) if app.debug else None
+        }), 500
 
 @app.route('/markets', methods=['GET'])
 def get_markets():
-    markets = le_admin.classes_.tolist()
-    return jsonify({'markets': markets})
+    """Get list of all available markets"""
+    try:
+        markets = le_admin.classes_.tolist()
+        return jsonify({
+            'markets': markets,
+            'count': len(markets)
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] Error in /markets: {str(e)}")
+        return jsonify({
+            'error': 'Failed to retrieve markets list',
+            'details': str(e) if app.debug else None
+        }), 500
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors"""
+    return jsonify({
+        'error': 'Endpoint not found',
+        'message': 'The requested URL was not found on this server',
+        'available_endpoints': {
+            'health': 'GET /',
+            'crops': 'GET /crops',
+            'markets': 'GET /markets',
+            'predict': 'POST /predict'
+        }
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors"""
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred'
+    }), 500
 
 if __name__ == '__main__':
     # Production-ready configuration
