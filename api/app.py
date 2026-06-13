@@ -11,10 +11,7 @@ app = Flask(__name__)
 # Uses environment variable for frontend URL, with fallback for local development
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 ALLOWED_ORIGINS = [
-    FRONTEND_URL,
-    'http://localhost:3000',  # Local dev
-    'http://localhost:8080',  # Alternative local dev
-    'http://127.0.0.1:5000',  # Flask dev
+    "https://ethio-crop-price-predictor.vercel.app" 
 ]
 
 CORS(app, 
