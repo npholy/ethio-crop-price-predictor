@@ -1,0 +1,8 @@
+# Vercel ignore file - files that don't need to be deployed
+*.md
+DESIGN_SPEC.md
+PREMIUM_DESIGN_IMPLEMENTATION.md
+QUICKSTART.md
+VISUAL_GUIDE.md
+.env.example
+premium-styles.css
